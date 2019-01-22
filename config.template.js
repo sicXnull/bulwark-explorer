@@ -4,14 +4,14 @@
  */
 const config = {
   'api': {
-    'host': 'https://explorer.bulwarkcrypto.com',
+    'host': 'https://explorer.posqcrypto.com',
     'port': '443',
     'prefix': '/api',
     'timeout': '5s'
   },
   'coinMarketCap': {
     'api': 'http://api.coinmarketcap.com/v1/ticker/',
-    'ticker': 'bulwark'
+    'ticker': 'posq'
   },
   'db': {
     'host': '127.0.0.1',
@@ -26,7 +26,7 @@ const config = {
   'rpc': {
     'host': '127.0.0.1',
     'port': '52541',
-    'user': 'bulwarkrpc',
+    'user': 'posqrpc',
     'pass': 'someverysafepassword',
     'timeout': 8000, // 8 seconds
   },
@@ -34,7 +34,7 @@ const config = {
     'url': 'https://hooks.slack.com/services/A00000000/B00000000/somekindofhashhere',
     //'channel': '#general',
     //'username': 'Block Report',
-    //'icon_emoji': ':bwk:'
+    //'icon_emoji': ':posq:'
   }
 };
 

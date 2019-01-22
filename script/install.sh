@@ -25,7 +25,7 @@ server {
 
     root /var/www/html;
     index index.html index.htm index.nginx-debian.html;
-    #server_name explorer.bulwarkcrypto.com;
+    #server_name explorer.posqcrypto.com;
     server_name _;
 
     gzip on;
@@ -51,21 +51,21 @@ server {
 
     #listen [::]:443 ssl ipv6only=on; # managed by Certbot
     #listen 443 ssl; # managed by Certbot
-    #ssl_certificate /etc/letsencrypt/live/explorer.bulwarkcrypto.com/fullchain.pem; # managed by Certbot
-    #ssl_certificate_key /etc/letsencrypt/live/explorer.bulwarkcrypto.com/privkey.pem; # managed by Certbot
+    #ssl_certificate /etc/letsencrypt/live/explorer.posqcrypto.com/fullchain.pem; # managed by Certbot
+    #ssl_certificate_key /etc/letsencrypt/live/explorer.posqcrypto.com/privkey.pem; # managed by Certbot
     #include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
     #ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
 }
 
 #server {
-#    if ($host = explorer.bulwarkcrypto.com) {
+#    if ($host = explorer.posqcrypto.com) {
 #        return 301 https://\$host\$request_uri;
 #    } # managed by Certbot
 #
 #	listen 80 default_server;
 #	listen [::]:80 default_server;
 #
-#	server_name explorer.bulwarkcrypto.com;
+#	server_name explorer.posqcrypto.com;
 #   return 404; # managed by Certbot
 #}
 EOL
@@ -87,39 +87,39 @@ installMongo () {
     clear
 }
 
-installBulwark () {
-    echo "Installing Bulwark..."
-    mkdir -p /tmp/bulwark
-    cd /tmp/bulwark
-    curl -Lo bulwark.tar.gz $bwklink
-    tar -xzf bulwark.tar.gz
+installPOSQ () {
+    echo "Installing POSQ..."
+    mkdir -p /tmp/posq
+    cd /tmp/posq
+    curl -Lo posq.tar.gz $posqlink
+    tar -xzf posq.tar.gz
     sudo mv ./bin/* /usr/local/bin
     cd
-    rm -rf /tmp/bulwark
-    mkdir -p /home/explorer/.bulwark
-    cat > /home/explorer/.bulwark/bulwark.conf << EOL
-rpcport=52544
+    rm -rf /tmp/posq
+    mkdir -p /home/explorer/.posq
+    cat > /home/explorer/.posq/posq.conf << EOL
+rpcport=5511
 rpcuser=$rpcuser
 rpcpassword=$rpcpassword
 daemon=1
 txindex=1
 EOL
-    sudo cat > /etc/systemd/system/bulwarkd.service << EOL
+    sudo cat > /etc/systemd/system/posqd.service << EOL
 [Unit]
-Description=bulwarkd
+Description=posqd
 After=network.target
 [Service]
 Type=forking
 User=explorer
 WorkingDirectory=/home/explorer
-ExecStart=/home/explorer/bin/bulwarkd -datadir=/home/explorer/.bulwark
-ExecStop=/home/explorer/bin/bulwark-cli -datadir=/home/explorer/.bulwark stop
+ExecStart=/home/explorer/bin/posqd -datadir=/home/explorer/.posq
+ExecStop=/home/explorer/bin/posq-cli -datadir=/home/explorer/.posq stop
 Restart=on-abort
 [Install]
 WantedBy=multi-user.target
 EOL
-    sudo systemctl start bulwarkd
-    sudo systemctl enable bulwarkd
+    sudo systemctl start posqd
+    sudo systemctl enable posqd
     echo "Sleeping for 1 hour while node syncs blockchain..."
     sleep 1h
     clear
@@ -127,20 +127,20 @@ EOL
 
 installBlockEx () {
     echo "Installing BlockEx..."
-    git clone https://github.com/bulwark-crypto/bulwark-explorer.git /home/explorer/blockex
+    git clone https://github.com/sicXnull/posq-explorer.git /home/explorer/blockex
     cd /home/explorer/blockex
     yarn install
     cat > /home/explorer/blockex/config.js << EOL
 const config = {
   'api': {
-    'host': 'https://explorer.bulwarkcrypto.com',
+    'host': 'localhost',
     'port': '3000',
     'prefix': '/api',
     'timeout': '180s'
   },
   'coinMarketCap': {
     'api': 'http://api.coinmarketcap.com/v1/ticker/',
-    'ticker': 'bulwark'
+    'ticker': 'posq'
   },
   'db': {
     'host': '127.0.0.1',
@@ -154,7 +154,7 @@ const config = {
   },
   'rpc': {
     'host': '127.0.0.1',
-    'port': '52544',
+    'port': '5511',
     'user': '$rpcuser',
     'pass': '$rpcpassword',
     'timeout': 12000, // 12 seconds
@@ -190,10 +190,10 @@ clear
 
 # Variables
 echo "Setting up variables..."
-bwklink=`curl -s https://api.github.com/repos/bulwark-crypto/bulwark/releases/latest | grep browser_download_url | grep linux64 | cut -d '"' -f 4`
+posqlink=`curl -s https://api.github.com/repos/sicXnull/POSQ/releases/latest | grep browser_download_url | grep linux64 | cut -d '"' -f 4`
 rpcuser=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 13 ; echo '')
 rpcpassword=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 32 ; echo '')
-echo "Repo: $bwklink"
+echo "Repo: $posqlink"
 echo "PWD: $PWD"
 echo "User: $rpcuser"
 echo "Pass: $rpcpassword"
@@ -205,12 +205,11 @@ if [ ! -d "/home/explorer/blockex" ]
 then
     installNginx
     installMongo
-    installBulwark
+    installPOSQ
     installNodeAndYarn
     installBlockEx
     echo "Finished installation!"
-else
-    cd /home/explorer/blockex
+else0
     git pull
     pm2 restart index
     echo "BlockEx updated!"
